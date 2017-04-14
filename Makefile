@@ -1,9 +1,13 @@
-PACKAGES=unix core ppx_jane zarith batteries bitv bitarray core_bench 
-SETUP_PACKAGE_NAMES=ocamlfind ocamlbuild zarith batteries bitv 
+PACKAGES=unix core ppx_jane zarith batteries bitv bitarray ocbitset core_bench
+SETUP_PACKAGE_NAMES=ocamlfind ocamlbuild zarith batteries bitv ocbitset
 
 .PHONY: default setup clean
 
 default: create operation
+
+## TODO: Add custom installations for
+## - bitarray
+## - ocbitset
 
 setup:
 	opam install $(SETUP_PACKAGE_NAMES)

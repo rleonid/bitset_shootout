@@ -53,6 +53,12 @@ let () =
 
   assert (all_set bia_100 s100 (BitarraySet.is_set bia_index));
 
+  let ocb_10 = singles s10 ocb_singleton in
+  let ocb_100 = singles s100 ocb_singleton in
+  let ocb_1000 = singles s1000 ocb_singleton in
+
+  assert (all_set ocb_100 s100 (OCbitSet.is_set ocb_index));
+
   (* Construct the empties for the start of the fold. *)
   let zar_e10 = ZarithBitSet.empty () in
   let zar_e100 = ZarithBitSet.empty () in
@@ -69,7 +75,11 @@ let () =
   let bia_e10 = BitarraySet.empty bia_index in
   let bia_e100 = BitarraySet.empty bia_index in
   let bia_e1000 = BitarraySet.empty bia_index in
- 
+
+  let ocb_e10 = OCbitSet.empty ocb_index in
+  let ocb_e100 = OCbitSet.empty ocb_index in
+  let ocb_e1000 = OCbitSet.empty ocb_index in
+
   (* Time these *)
   let zarith10 () = Array.fold_left zar_10 ~init:zar_e10 ~f:ZarithBitSet.union in
   let zarith100 () = Array.fold_left zar_100 ~init:zar_e100 ~f:ZarithBitSet.union in
@@ -86,13 +96,17 @@ let () =
   let bia10 () = Array.fold_left bia_10 ~init:bia_e10 ~f:BitarraySet.union in
   let bia100 () = Array.fold_left bia_100 ~init:bia_e100 ~f:BitarraySet.union in
   let bia1000 () = Array.fold_left bia_1000 ~init:bia_e1000 ~f:BitarraySet.union in
- 
+
+  let ocb10 () = Array.fold_left ocb_10 ~init:ocb_e10 ~f:OCbitSet.union in
+  let ocb100 () = Array.fold_left ocb_100 ~init:ocb_e100 ~f:OCbitSet.union in
+  let ocb1000 () = Array.fold_left ocb_1000 ~init:ocb_e1000 ~f:OCbitSet.union in
+
   (* But first, let's make sure they're the same. *)
   let elemsl = Array.to_list elems in
   let s100l  = Array.to_list s100 |> int_list_dedup in
 
-  let same s is_set = 
-    elemsl 
+  let same s is_set =
+    elemsl
     |> List.filter ~f:(is_set s)
     |> int_list_dedup
     |> fun l -> l = s100l
@@ -109,16 +123,24 @@ let () =
   let bitarray_same = same (bia100 ()) (BitarraySet.is_set bia_index) in
   Printf.printf "Bitarray same results: %b\n" bitarray_same;
 
+  let ocbarray_same = same (ocb100 ()) (OCbitSet.is_set ocb_index) in
+  Printf.printf "Ocbitset same results: %b\n" ocbarray_same;
+
   let ign f () = ignore (f ()) in
   let open Core_bench.Std in
   Core.Command.run (Bench.make_command
-    [ Bench.Test.create ~name:"Bitv 10" (ign biv10)
-    ; Bench.Test.create ~name:"Bitv 100" (ign biv100)
-    ; Bench.Test.create ~name:"Bitv 1000" (ign biv1000)
+    [
+      Bench.Test.create ~name:"Ocbitset 10" (ign ocb10)
+    ; Bench.Test.create ~name:"Ocbitset 100" (ign ocb100)
+    ; Bench.Test.create ~name:"Ocbitset 1000" (ign ocb1000)
 
     ; Bench.Test.create ~name:"Bitarray 10" (ign bia10)
     ; Bench.Test.create ~name:"Bitarray 100" (ign bia100)
     ; Bench.Test.create ~name:"Bitarray 1000" (ign bia1000)
+
+    ; Bench.Test.create ~name:"Bitv 10" (ign biv10)
+    ; Bench.Test.create ~name:"Bitv 100" (ign biv100)
+    ; Bench.Test.create ~name:"Bitv 1000" (ign biv1000)
 
     ; Bench.Test.create ~name:"Batteries 10" (ign batteries10)
     ; Bench.Test.create ~name:"Batteries 100" (ign batteries100)

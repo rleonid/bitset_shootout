@@ -8,6 +8,20 @@ module IntMap =
 
 module ZarithBitSet = struct
 
+  type index =
+    { size    : int
+    ; indices : int IntMap.t
+    }
+
+  let index arr =
+    { size    = Array.length arr
+    ; indices = Array.fold_left arr ~init:(0, IntMap.empty)
+                  ~f:(fun (i, sm) a -> (i + 1, IntMap.add a i sm))
+                |> snd
+    }
+
+  (* One could compute all of the individual sets ahead of time, but that
+     won't make the comparison fair.
   type index = Z.t IntMap.t
 
   let index arr =
@@ -16,20 +30,21 @@ module ZarithBitSet = struct
                       let m = Z.(shift_left one i) in
                       (i + 1, IntMap.add v m s))
                   |> snd
+  *)
 
-  let lookup_mask i elem =
-    IntMap.find elem i
+  let single_mask i elem =
+    Z.(shift_left one (IntMap.find elem i.indices))
 
-  let singleton = lookup_mask
+  let singleton = single_mask
 
-  let empty () = 
+  let empty () =
     Z.zero
 
   let set i s elem =
-    Z.logand s (lookup_mask i elem)
+    Z.logand s (single_mask i elem)
 
   let is_set i t elem =
-    let m = lookup_mask i elem in
+    let m = single_mask i elem in
     Z.(equal m (logand m t))
 
   let union =
@@ -45,7 +60,7 @@ end
 
 module BatteriesBitSet = struct
 
-  module BitSet = Batteries.BitSet 
+  module BitSet = Batteries.BitSet
 
   type index =
     { size    : int
@@ -67,7 +82,7 @@ module BatteriesBitSet = struct
     set i s elem;
     s
 
-  let empty = BitSet.empty 
+  let empty = BitSet.empty
 
   let is_set i t elem = BitSet.mem t (IntMap.find elem i.indices)
 
@@ -80,7 +95,7 @@ module BatteriesBitSet = struct
 end
 
 module BitvectorSet = struct
-  
+
   type index =
     { indices : int IntMap.t
     ; size    : int
@@ -88,14 +103,14 @@ module BitvectorSet = struct
 
   let index arr =
     { indices = Array.fold_left arr ~init:(0, IntMap.empty)
-                  ~f:(fun (i, sm) a -> (i + 1, IntMap.add a i sm)) 
+                  ~f:(fun (i, sm) a -> (i + 1, IntMap.add a i sm))
                 |> snd
     ; size    = Array.length arr
     }
-  
+
   let empty i = Bitv.create i.size false
 
-  let singleton i elem = 
+  let singleton i elem =
     let s = empty i in
     Bitv.set s (IntMap.find elem i.indices) true;
     s
@@ -108,7 +123,7 @@ module BitvectorSet = struct
 
 end
 
-(* Not an option, too many missing operations. 
+(* Not an option, too many missing operations.
 module CSet = struct
 
   module Bitarray = Core_extended.Bitarray
@@ -122,7 +137,7 @@ module CSet = struct
     { indices = Array.mapi arr ~f:(fun i a -> (a, i)) |> Array.to_list
     ; size    = Array.length arr
     }
- 
+
   let empty i = Bitarray.create i.size
 
   let singleton i elem =
@@ -132,7 +147,7 @@ module CSet = struct
 end *)
 
 module BitarraySet = struct
-  
+
   type index =
     { indices : int64 IntMap.t
     ; size    : int64 (* Really? *)
@@ -140,16 +155,16 @@ module BitarraySet = struct
 
   let index arr =
     { indices = Array.fold_left arr ~init:(Int64.zero, IntMap.empty)
-                    ~f:(fun (i, sm) a -> (Int64.succ i, IntMap.add a i sm)) 
+                    ~f:(fun (i, sm) a -> (Int64.succ i, IntMap.add a i sm))
                   |> snd
     ; size    = Int64.of_int (Array.length arr)
     }
-  
+
   let empty i = Bitarray.create i.size
 
-  let singleton i elem = 
+  let singleton i elem =
     let s = empty i in
-    Bitarray.set_bit s (IntMap.find elem i.indices); 
+    Bitarray.set_bit s (IntMap.find elem i.indices);
     s
 
   let is_set i t elem = Bitarray.get_bit t (IntMap.find elem i.indices)
@@ -157,6 +172,33 @@ module BitarraySet = struct
   let union = Bitarray.bitwise_or
   let inter = Bitarray.bitwise_and
   let diff x y = Bitarray.bitwise_and x (Bitarray.bitwise_not y)
+
+end
+
+module OCbitSet = struct
+
+  type index =
+    { indices : int IntMap.t
+    ; size    : int (* Really? *)
+    }
+
+  let index arr =
+    { indices = Array.fold_left arr ~init:(0, IntMap.empty)
+                    ~f:(fun (i, sm) a -> (i + 1, IntMap.add a i sm))
+                  |> snd
+    ; size    = Array.length arr
+    }
+
+  let empty i = Ocbitset.create i.size
+
+  let singleton i elem =
+    let s = empty i in
+    Ocbitset.set s (IntMap.find elem i.indices);
+    s
+
+  let is_set i t elem = Ocbitset.get t (IntMap.find elem i.indices)
+
+  let union = Ocbitset.union
 
 end
 
@@ -175,10 +217,12 @@ let zar_index = ZarithBitSet.index elems
 let bat_index = BatteriesBitSet.index elems
 let biv_index = BitvectorSet.index elems
 let bia_index = BitarraySet.index elems
+let ocb_index = OCbitSet.index elems
 
 (* Singleton constructors, curried with the index *)
 let zar_singleton = ZarithBitSet.singleton zar_index
 let bat_singleton = BatteriesBitSet.singleton bat_index
 let biv_singleton = BitvectorSet.singleton biv_index
 let bia_singleton = BitarraySet.singleton bia_index
+let ocb_singleton = OCbitSet.singleton ocb_index
 
