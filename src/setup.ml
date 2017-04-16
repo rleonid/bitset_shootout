@@ -5,9 +5,9 @@ module IntMap =
   Map.Make (struct type t = int let compare = compare end)
 
 (* Bit sets on top of Zarith *)
-
 module ZarithBitSet = struct
 
+  type t = Z.t
   type index =
     { size    : int
     ; indices : int IntMap.t
@@ -37,7 +37,7 @@ module ZarithBitSet = struct
 
   let singleton = single_mask
 
-  let empty () =
+  let empty _i =
     Z.zero
 
   let set i s elem =
@@ -62,6 +62,7 @@ module BatteriesBitSet = struct
 
   module BitSet = Batteries.BitSet
 
+  type t = BitSet.t
   type index =
     { size    : int
     ; indices : int IntMap.t
@@ -82,7 +83,7 @@ module BatteriesBitSet = struct
     set i s elem;
     s
 
-  let empty = BitSet.empty
+  let empty _i = BitSet.empty ()
 
   let is_set i t elem = BitSet.mem t (IntMap.find elem i.indices)
 
@@ -96,6 +97,7 @@ end
 
 module BitvectorSet = struct
 
+  type t = Bitv.t
   type index =
     { indices : int IntMap.t
     ; size    : int
@@ -148,6 +150,7 @@ end *)
 
 module BitarraySet = struct
 
+  type t = Bitarray.t
   type index =
     { indices : int64 IntMap.t
     ; size    : int64 (* Really? *)
@@ -176,6 +179,8 @@ module BitarraySet = struct
 end
 
 module OCbitSet = struct
+
+  type t = Ocbitset.t
 
   type index =
     { indices : int IntMap.t
@@ -209,20 +214,35 @@ let elems = Array.init test_size ~f:(fun i -> i)
 let sample m =
   Array.init m ~f:(fun _ -> Random.int test_size)
 
-let singles mi singleton =
-  Array.map mi ~f:(fun i -> singleton elems.(i))
+module Test (Bs : sig
+  type index
+  type t
+  val index : int array -> index
+  val empty : index -> t
+  val singleton : index -> int -> t
+  val is_set : index -> t -> int -> bool
+  val union : t -> t -> t
+end) = struct
 
-(* Create the indices *)
-let zar_index = ZarithBitSet.index elems
-let bat_index = BatteriesBitSet.index elems
-let biv_index = BitvectorSet.index elems
-let bia_index = BitarraySet.index elems
-let ocb_index = OCbitSet.index elems
+  (* Create the indices *)
+  let index = Bs.index elems
 
-(* Singleton constructors, curried with the index *)
-let zar_singleton = ZarithBitSet.singleton zar_index
-let bat_singleton = BatteriesBitSet.singleton bat_index
-let biv_singleton = BitvectorSet.singleton biv_index
-let bia_singleton = BitarraySet.singleton bia_index
-let ocb_singleton = OCbitSet.singleton ocb_index
+  (* Singleton constructors, curried with the index *)
+  let singleton = Bs.singleton index
+
+  let create_single_elements mi =
+    Array.map mi ~f:(fun i -> singleton elems.(i))
+
+  let is_set = Bs.is_set index
+
+  let reduce =
+    Array.fold_left ~init:(Bs.empty index) ~f:Bs.union
+
+end
+
+module ZarithTest = Test(ZarithBitSet)
+module BatteriesTest = Test(BatteriesBitSet)
+module BitvectorTest = Test(BitvectorSet)
+module BitarrayTest = Test(BitarraySet)
+module OcbitsetTest = Test(OCbitSet)
 

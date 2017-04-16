@@ -9,24 +9,29 @@ let () =
   let s1000 = sample 1000 in
 
   let open Core_bench.Std in
+  let btc name size t sample =
+    Bench.Test.create ~name:(Printf.sprintf "%s %d" name size)
+      (fun () -> ignore (t sample))
+  in
   Core.Command.run (Bench.make_command
-    [ Bench.Test.create ~name:"Zarith 10"      (fun () -> ignore (singles s10   zar_singleton))
-    ; Bench.Test.create ~name:"Zarith 100"     (fun () -> ignore (singles s100  zar_singleton))
-    ; Bench.Test.create ~name:"Zarith 1000"    (fun () -> ignore (singles s1000 zar_singleton))
+    [ btc "Zarith"    10    ZarithTest.create_single_elements     s10
+    ; btc "Zarith"    100   ZarithTest.create_single_elements     s100
+    ; btc "Zarith"    1000  ZarithTest.create_single_elements     s1000
 
-    ; Bench.Test.create ~name:"Batteries 10"   (fun () -> ignore (singles s10   bat_singleton))
-    ; Bench.Test.create ~name:"Batteries 100"  (fun () -> ignore (singles s100  bat_singleton))
-    ; Bench.Test.create ~name:"Batteries 1000" (fun () -> ignore (singles s1000 bat_singleton))
+    ; btc "Batteries" 10    BatteriesTest.create_single_elements  s10
+    ; btc "Batteries" 100   BatteriesTest.create_single_elements  s100
+    ; btc "Batteries" 1000  BatteriesTest.create_single_elements  s1000
 
-    ; Bench.Test.create ~name:"Bitv 10"        (fun () -> ignore (singles s10   biv_singleton))
-    ; Bench.Test.create ~name:"Bitv 100"       (fun () -> ignore (singles s100  biv_singleton))
-    ; Bench.Test.create ~name:"Bitv 1000"      (fun () -> ignore (singles s1000 biv_singleton))
+    ; btc "Bitv"      10    BitvectorTest.create_single_elements  s10
+    ; btc "Bitv"      100   BitvectorTest.create_single_elements  s100
+    ; btc "Bitv"      1000  BitvectorTest.create_single_elements  s1000
 
-    ; Bench.Test.create ~name:"Bitarray 10"    (fun () -> ignore (singles s10   bia_singleton))
-    ; Bench.Test.create ~name:"Bitarray 100"   (fun () -> ignore (singles s100  bia_singleton))
-    ; Bench.Test.create ~name:"Bitarray 1000"  (fun () -> ignore (singles s1000 bia_singleton))
+    ; btc "Bitarray"  10    BitarrayTest.create_single_elements   s10
+    ; btc "Bitarray"  100   BitarrayTest.create_single_elements   s100
+    ; btc "Bitarray"  1000  BitarrayTest.create_single_elements   s1000
 
-    ; Bench.Test.create ~name:"Ocbitset 10"    (fun () -> ignore (singles s10   ocb_singleton))
-    ; Bench.Test.create ~name:"Ocbitset 100"   (fun () -> ignore (singles s100  ocb_singleton))
-    ; Bench.Test.create ~name:"Ocbitset 1000"  (fun () -> ignore (singles s1000 ocb_singleton))
+    ; btc "Ocbitset"  10    OcbitsetTest.create_single_elements   s10
+    ; btc "Ocbitset"  100   OcbitsetTest.create_single_elements   s100
+    ; btc "Ocbitset"  1000  OcbitsetTest.create_single_elements   s1000
+
     ])
