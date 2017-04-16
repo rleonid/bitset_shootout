@@ -59,6 +59,13 @@ let () =
 
   assert (all_set ocb_100 s100 OcbitsetTest.is_set);
 
+  let con_10 = ContainersTest.create_single_elements s10 in
+  let con_100 = ContainersTest.create_single_elements s100 in
+  let con_1000 = ContainersTest.create_single_elements s1000 in
+
+  assert (all_set con_100 s100 ContainersTest.is_set);
+
+
   (* But first, let's make sure they're actually the same. *)
   let elemsl = Array.to_list elems in
   let s100l  = Array.to_list s100 |> int_list_dedup in
@@ -83,6 +90,9 @@ let () =
 
   let ocbarray_same = same (OcbitsetTest.reduce ocb_100) OcbitsetTest.is_set in
   Printf.printf "Ocbitset same results: %b\n" ocbarray_same;
+
+  let conarray_same = same (ContainersTest.reduce con_100) ContainersTest.is_set in
+  Printf.printf "Containers same results: %b\n" conarray_same;
 
   let open Core_bench.Std in
   let btc name size t sample =
@@ -109,5 +119,9 @@ let () =
     ; btc "Ocbitset" 10     OcbitsetTest.reduce ocb_10
     ; btc "Ocbitset" 100    OcbitsetTest.reduce ocb_100
     ; btc "Ocbitset" 1000   OcbitsetTest.reduce ocb_1000
+
+    ; btc "Containers" 10     ContainersTest.reduce con_10
+    ; btc "Containers" 100    ContainersTest.reduce con_100
+    ; btc "Containers" 1000   ContainersTest.reduce con_1000
 
     ])

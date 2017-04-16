@@ -184,7 +184,7 @@ module OCbitSet = struct
 
   type index =
     { indices : int IntMap.t
-    ; size    : int (* Really? *)
+    ; size    : int
     }
 
   let index arr =
@@ -204,6 +204,36 @@ module OCbitSet = struct
   let is_set i t elem = Ocbitset.get t (IntMap.find elem i.indices)
 
   let union = Ocbitset.union
+
+end
+
+(* Containers. *)
+module Cbitset = struct
+
+  type t = CCBV.t
+
+  type index =
+    { indices : int IntMap.t
+    ; size    : int
+    }
+
+  let index arr =
+    { indices = Array.fold_left arr ~init:(0, IntMap.empty)
+                    ~f:(fun (i, sm) a -> (i + 1, IntMap.add a i sm))
+                  |> snd
+    ; size    = Array.length arr
+    }
+
+  let empty _i = CCBV.empty ()
+
+  let singleton i elem =
+    let s = CCBV.create ~size:i.size false in
+    CCBV.set s (IntMap.find elem i.indices);
+    s
+
+  let is_set i t elem = CCBV.get t (IntMap.find elem i.indices)
+
+  let union = CCBV.union
 
 end
 
@@ -245,4 +275,5 @@ module BatteriesTest = Test(BatteriesBitSet)
 module BitvectorTest = Test(BitvectorSet)
 module BitarrayTest = Test(BitarraySet)
 module OcbitsetTest = Test(OCbitSet)
+module ContainersTest = Test(Cbitset)
 

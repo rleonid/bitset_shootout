@@ -34,4 +34,8 @@ let () =
     ; btc "Ocbitset"  100   OcbitsetTest.create_single_elements   s100
     ; btc "Ocbitset"  1000  OcbitsetTest.create_single_elements   s1000
 
+    ; btc "Containers"  10    ContainersTest.create_single_elements   s10
+    ; btc "Containers"  100   ContainersTest.create_single_elements   s100
+    ; btc "Containers"  1000  ContainersTest.create_single_elements   s1000
+
     ])

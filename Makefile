@@ -1,5 +1,5 @@
-PACKAGES=unix core ppx_jane zarith batteries bitv bitarray ocbitset core_bench
-SETUP_PACKAGE_NAMES=ocamlfind ocamlbuild zarith batteries bitv ocbitset
+PACKAGES=unix core ppx_jane zarith batteries bitv bitarray ocbitset containers.data core_bench
+SETUP_PACKAGE_NAMES=ocamlfind ocamlbuild zarith batteries bitv ocbitset containers
 
 .PHONY: default setup clean
 
