@@ -8,6 +8,7 @@ Contestants :
   - [Bit vector](https://github.com/backtracking/bitv), Pure
   - [Bitarray](https://github.com/travisbrady/ocaml-bitarray)  Unreleased, Ctypes bindings
   - [Ocbitset](https://github.com/rleonid/ocbitset) Unreleased, Another Ctypes bindings
+  - [Containers CCBV](https://github.com/c-cube/ocaml-containers/blob/master/src/data/CCBV.mli), Pure
 
 Creation:
 
