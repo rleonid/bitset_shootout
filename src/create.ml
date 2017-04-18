@@ -4,38 +4,26 @@ open Setup
 
 let () =
   (* Samples *)
-  let s10 = sample 10 in
-  let s100 = sample 100 in
-  let s1000 = sample 1000 in
+  let s10 = permutation 10 in
+  let s100 = permutation 100 in
+  let s1000 = permutation 1000 in
 
+  let open Core.Std in
   let open Core_bench.Std in
-  let btc name size t sample =
-    Bench.Test.create ~name:(Printf.sprintf "%s %d" name size)
-      (fun () -> ignore (t sample))
+  let btc name op =
+    Bench.Test.create_indexed ~name ~args:[10;100;1000]
+      (function
+        | 10   -> Staged.stage (fun () -> op s10)
+        | 100  -> Staged.stage (fun () -> op s100)
+        | 1000 -> Staged.stage (fun () -> op s1000)
+        | _    -> assert false)
   in
   Core.Command.run (Bench.make_command
-    [ btc "Zarith"    10    ZarithTest.create_single_elements     s10
-    ; btc "Zarith"    100   ZarithTest.create_single_elements     s100
-    ; btc "Zarith"    1000  ZarithTest.create_single_elements     s1000
-
-    ; btc "Batteries" 10    BatteriesTest.create_single_elements  s10
-    ; btc "Batteries" 100   BatteriesTest.create_single_elements  s100
-    ; btc "Batteries" 1000  BatteriesTest.create_single_elements  s1000
-
-    ; btc "Bitv"      10    BitvectorTest.create_single_elements  s10
-    ; btc "Bitv"      100   BitvectorTest.create_single_elements  s100
-    ; btc "Bitv"      1000  BitvectorTest.create_single_elements  s1000
-
-    ; btc "Bitarray"  10    BitarrayTest.create_single_elements   s10
-    ; btc "Bitarray"  100   BitarrayTest.create_single_elements   s100
-    ; btc "Bitarray"  1000  BitarrayTest.create_single_elements   s1000
-
-    ; btc "Ocbitset"  10    OcbitsetTest.create_single_elements   s10
-    ; btc "Ocbitset"  100   OcbitsetTest.create_single_elements   s100
-    ; btc "Ocbitset"  1000  OcbitsetTest.create_single_elements   s1000
-
-    ; btc "Containers"  10    ContainersTest.create_single_elements   s10
-    ; btc "Containers"  100   ContainersTest.create_single_elements   s100
-    ; btc "Containers"  1000  ContainersTest.create_single_elements   s1000
-
+    [ btc "Zarith"                  ZarithTest.create_multiple_elements
+    (*; btc "Zarith Precompute Masks" ZarithPrecomputeMasksTest.create_multiple_elements  *)
+    ; btc "Batteries"               BatteriesTest.create_multiple_elements
+    ; btc "Bitv"                    BitvectorTest.create_multiple_elements
+    ; btc "Bitarray"                BitarrayTest.create_multiple_elements
+    ; btc "Ocbitset"                OcbitsetTest.create_multiple_elements
+    ; btc "Containers"              ContainersTest.create_multiple_elements
     ])

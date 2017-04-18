@@ -20,18 +20,6 @@ module ZarithBitSet = struct
                 |> snd
     }
 
-  (* One could compute all of the individual sets ahead of time, but that
-     won't make the comparison fair.
-  type index = Z.t IntMap.t
-
-  let index arr =
-    Array.fold_left arr ~init:(0, IntMap.empty)
-                ~f:(fun (i, s) v ->
-                      let m = Z.(shift_left one i) in
-                      (i + 1, IntMap.add v m s))
-                  |> snd
-  *)
-
   let single_mask i elem =
     Z.(shift_left one (IntMap.find elem i.indices))
 
@@ -41,7 +29,52 @@ module ZarithBitSet = struct
     Z.zero
 
   let set i s elem =
-    Z.logand s (single_mask i elem)
+    Z.logor s (single_mask i elem)
+
+  let is_set i t elem =
+    let m = single_mask i elem in
+    Z.(equal m (logand m t))
+
+  let union =
+    Z.logor
+
+  let inter =
+    Z.logand
+
+  let diff x y =
+    Z.logand x (Z.lognot y)
+
+end
+
+(* Bit sets on top of Zarith *)
+module ZarithPrecomputeMasksBitSet = struct
+
+  type t = Z.t
+
+  type index =
+    { size    : int
+    ; indices : Z.t IntMap.t
+    }
+
+  let index arr =
+    { size    = Array.length arr
+    ; indices = Array.fold_left arr ~init:(0, IntMap.empty)
+                  ~f:(fun (i, sm) a ->
+                       let m = Z.(shift_left one i) in
+                       (i + 1, IntMap.add a m sm))
+                |> snd
+    }
+
+  let single_mask i elem =
+    IntMap.find elem i.indices
+
+  let singleton = single_mask
+
+  let empty _i =
+    Z.zero
+
+  let set i s elem =
+    Z.logor s (single_mask i elem)
 
   let is_set i t elem =
     let m = single_mask i elem in
@@ -76,12 +109,12 @@ module BatteriesBitSet = struct
     }
 
   let set i s elem =
-    BitSet.set s (IntMap.find elem i.indices)
+    BitSet.set s (IntMap.find elem i.indices);
+    s
 
   let singleton i elem =
     let s = BitSet.create i.size in
-    set i s elem;
-    s
+    set i s elem
 
   let empty _i = BitSet.empty ()
 
@@ -112,17 +145,18 @@ module BitvectorSet = struct
 
   let empty i = Bitv.create i.size false
 
-  let singleton i elem =
-    let s = empty i in
+  let set i s elem =
     Bitv.set s (IntMap.find elem i.indices) true;
     s
+
+  let singleton i elem =
+    set i (empty i) elem
 
   let is_set i t elem = Bitv.get t (IntMap.find elem i.indices)
 
   let union = Bitv.bw_or
   let inter = Bitv.bw_and
   let diff x y = Bitv.bw_and x (Bitv.bw_not y)
-
 end
 
 (* Not an option, too many missing operations.
@@ -165,10 +199,12 @@ module BitarraySet = struct
 
   let empty i = Bitarray.create i.size
 
-  let singleton i elem =
-    let s = empty i in
+  let set i s elem =
     Bitarray.set_bit s (IntMap.find elem i.indices);
     s
+
+  let singleton i elem =
+    set i (empty i) elem
 
   let is_set i t elem = Bitarray.get_bit t (IntMap.find elem i.indices)
 
@@ -196,14 +232,18 @@ module OCbitSet = struct
 
   let empty i = Ocbitset.create i.size
 
-  let singleton i elem =
-    let s = empty i in
+  let set i s elem =
     Ocbitset.set s (IntMap.find elem i.indices);
     s
+
+  let singleton i elem =
+    set i (empty i) elem
 
   let is_set i t elem = Ocbitset.get t (IntMap.find elem i.indices)
 
   let union = Ocbitset.union
+
+  let diff = Ocbitset.difference
 
 end
 
@@ -226,14 +266,24 @@ module Cbitset = struct
 
   let empty _i = CCBV.empty ()
 
-  let singleton i elem =
-    let s = CCBV.create ~size:i.size false in
+  let set i s elem =
     CCBV.set s (IntMap.find elem i.indices);
     s
+
+  let singleton i elem =
+    set i (empty i) elem
 
   let is_set i t elem = CCBV.get t (IntMap.find elem i.indices)
 
   let union = CCBV.union
+
+  let negate y =
+    let yc = CCBV.copy y in
+    CCBV.iter yc CCBV.(fun i _ -> CCBV.flip yc i);  (* Is this safe? *)
+    yc
+
+  let diff x y =
+    CCBV.union x (negate y)
 
 end
 
@@ -241,8 +291,21 @@ let test_size = 4000
 
 let elems = Array.init test_size ~f:(fun i -> i)
 
+let permute () =
+  let a = Array.copy elems in
+  for n = test_size - 1 downto 1 do
+    let k = Random.int (n + 1) in
+    let temp = a.(n) in
+    a.(n) <- a.(k);
+    a.(k) <- temp
+  done;
+  a
+
 let sample m =
   Array.init m ~f:(fun _ -> Random.int test_size)
+
+let permutation m =
+  Array.sub (permute ()) ~pos:0 ~len:m
 
 module Test (Bs : sig
   type index
@@ -250,8 +313,10 @@ module Test (Bs : sig
   val index : int array -> index
   val empty : index -> t
   val singleton : index -> int -> t
+  val set : index -> t -> int -> t
   val is_set : index -> t -> int -> bool
   val union : t -> t -> t
+  val diff : t -> t -> t
 end) = struct
 
   (* Create the indices *)
@@ -263,14 +328,37 @@ end) = struct
   let create_single_elements mi =
     Array.map mi ~f:(fun i -> singleton elems.(i))
 
+  let create_multiple_elements mi =
+    Array.fold_left mi ~init:(Bs.empty index) ~f:(Bs.set index)
+
   let is_set = Bs.is_set index
 
-  let reduce =
-    Array.fold_left ~init:(Bs.empty index) ~f:Bs.union
+  let reduce op mi =
+    let n = Array.length mi in
+    let rec loop a i =
+      if i = n then
+        a
+      else
+        loop (op a (mi.(i))) (i + 1)
+    in
+    loop mi.(0) 1
+
+  let reduce_union = reduce Bs.union
+
+  let reduce_union_test samples =
+    let m = Array.map ~f:create_multiple_elements samples in
+    fun () -> reduce_union m
+
+  let reduce_diff = reduce Bs.diff
+
+  let reduce_diff_test samples =
+    let m = Array.map ~f:create_multiple_elements samples in
+    fun () -> reduce_diff m
 
 end
 
 module ZarithTest = Test(ZarithBitSet)
+module ZarithPrecomputeMasksTest = Test(ZarithPrecomputeMasksBitSet)
 module BatteriesTest = Test(BatteriesBitSet)
 module BitvectorTest = Test(BitvectorSet)
 module BitarrayTest = Test(BitarraySet)

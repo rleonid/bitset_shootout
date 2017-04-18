@@ -3,7 +3,7 @@ SETUP_PACKAGE_NAMES=ocamlfind ocamlbuild zarith batteries bitv ocbitset containe
 
 .PHONY: default setup clean
 
-default: create operation
+default: create union diff
 
 ## TODO: Add custom installations for
 ## - bitarray
@@ -18,6 +18,8 @@ clean:
 create:
 	ocamlbuild -use-ocamlfind $(foreach package, $(PACKAGES),-package $(package)) -tag thread -I src create.native
 
-operation:
-	ocamlbuild -use-ocamlfind $(foreach package, $(PACKAGES),-package $(package)) -tag thread -I src operation.native
+union:
+	ocamlbuild -use-ocamlfind $(foreach package, $(PACKAGES),-package $(package)) -tag thread -I src union.native
 
+diff:
+	ocamlbuild -use-ocamlfind $(foreach package, $(PACKAGES),-package $(package)) -tag thread -I src diff.native
