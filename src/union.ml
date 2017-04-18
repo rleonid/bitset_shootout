@@ -28,6 +28,7 @@ let () =
   let bia = staged BitarrayTest.reduce_union_test in
   let ocb = staged OcbitsetTest.reduce_union_test in
   let con = staged ContainersTest.reduce_union_test in
+  let ncn = staged NewContainersTest.reduce_union_test in
 
   (* But first, let's make sure they're actually the same. *)
   let int_union =
@@ -61,16 +62,21 @@ let () =
   let conarray_same = same (ContainersTest.is_set (unst (con 100))) in
   Printf.printf "Containers same results: %b\n" conarray_same;
 
+  let ncnarray_same = same (NewContainersTest.is_set (unst (ncn 100))) in
+  Printf.printf "new containers same results: %b\n" ncnarray_same;
+
   let open Core_bench.Std in
   let btc name t =
     Bench.Test.create_indexed ~name ~args t
   in
   Core.Command.run (Bench.make_command
-    [ btc "Zarith" zar
+    [ (*btc "Zarith" zar
     (*; btc "Zarith Precompute Masks" zarp *)
     ; btc "Batteries" bat
     ; btc "Bitvector" biv
     ; btc "Bitarray" bia
     ; btc "Ocbitset" ocb
-    ; btc "Containers" con
+    
+    ; *)btc "Containers" con
+    ; btc "New Containers" ncn
     ])

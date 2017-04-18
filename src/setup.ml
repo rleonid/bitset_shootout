@@ -287,6 +287,42 @@ module Cbitset = struct
 
 end
 
+(* Containers. *)
+module Ncbitset = struct
+
+  type t = Cn.t
+
+  type index =
+    { indices : int IntMap.t
+    ; size    : int
+    }
+
+  let index arr =
+    { indices = Array.fold_left arr ~init:(0, IntMap.empty)
+                    ~f:(fun (i, sm) a -> (i + 1, IntMap.add a i sm))
+                  |> snd
+    ; size    = Array.length arr
+    }
+
+  let empty i = Cn.create ~size:i.size false
+
+  let set i s elem =
+    Cn.set s (IntMap.find elem i.indices);
+    s
+
+  let singleton i elem =
+    set i (empty i) elem
+
+  let is_set i t elem = Cn.get t (IntMap.find elem i.indices)
+
+  let union = Cn.union
+
+  let negate = Cn.negate
+
+  let diff x y = Cn.diff ~in_:x y
+
+end
+
 let test_size = 4000
 
 let elems = Array.init test_size ~f:(fun i -> i)
@@ -364,4 +400,5 @@ module BitvectorTest = Test(BitvectorSet)
 module BitarrayTest = Test(BitarraySet)
 module OcbitsetTest = Test(OCbitSet)
 module ContainersTest = Test(Cbitset)
+module NewContainersTest = Test(Ncbitset)
 
