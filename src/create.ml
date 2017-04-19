@@ -26,6 +26,7 @@ let () =
     ; btc "Bitarray"                BitarrayTest.create_multiple_elements
     ; btc "Ocbitset"                OcbitsetTest.create_multiple_elements
     
-    ; *)btc "Containers"              ContainersTest.create_multiple_elements
-    ; btc "New Containers"          NewContainersTest.create_multiple_elements
+    ; *)
+    btc "New Containers"          NewContainersTest.create_multiple_elements
+    ; btc "Containers"              ContainersTest.create_multiple_elements
     ])
