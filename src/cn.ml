@@ -22,9 +22,8 @@ let __count_bits n =
   in
   recurse 0 n
 
-(*$Q
-  (Q.int_bound (Sys.word_size - 1)
-    (fun i -> __count_bits __lsb_masks.(i) == i)
+(*  Can I access the "private" members in testing? $Q
+  (Q.int_bound (Sys.word_size - 1)) (fun i -> __count_bits __lsb_masks.(i) = i)
 *)
 
 type t = {
@@ -55,7 +54,7 @@ let create ~size default =
   end
 
 (*$Q
-  (Q.pair Q.small_int Q.bool (fun size b -> create ~size b |> length = size)
+  (Q.pair Q.small_int Q.bool) (fun (size, b) -> create ~size b |> length = size)
 *)
 
 (*$T
@@ -83,7 +82,7 @@ let cardinal bv =
   !n
 
 (*$Q
-  (Q.small_int (fun size -> create ~size true |> cardinal = size)
+  Q.small_int (fun size -> create ~size true |> cardinal = size)
 *)
 
 let __really_resize bv ~desired ~current size =
@@ -106,6 +105,7 @@ let __shrink bv size =
   __really_resize bv ~desired ~current size
 
 let resize bv size =
+  if size < 0 then invalid_arg "resize: negative size" else
   if size < bv.size                                                 (* shrink *)
   then __shrink bv size
   else if size = bv.size
@@ -180,10 +180,9 @@ let reset bv i =
 let flip bv i =
   if i < 0 then invalid_arg "reset: negative index" else
     let n = i / __width in
-    let i = i mod __width in
+    let j = i mod __width in
     if i >= bv.size then __grow bv i;
-    let i = i - n * __width in
-    Array.unsafe_set bv.a n ((Array.unsafe_get bv.a n) lxor (1 lsl i))
+    Array.unsafe_set bv.a n ((Array.unsafe_get bv.a n) lxor (1 lsl j))
 
 (*$R
   let bv = of_list [1;10; 11; 30] in
@@ -201,7 +200,7 @@ let flip bv i =
 *)
 
 let clear bv =
-  Array.fill bv.a 0 (Array.length bv.a - 1) 0
+  Array.fill bv.a 0 (Array.length bv.a) 0
 
 (*$T
   let bv = create ~size:37 true in cardinal bv = 37 && (clear bv; cardinal bv= 0)
@@ -340,7 +339,7 @@ let negate b =
   { a ; size = b.size }
 
 (*$Q
-  (Q.small_int (fun size -> create ~size false |> negate |> cardinal = size)
+  Q.small_int (fun size -> create ~size false |> negate |> cardinal = size)
 *)
 
 (* Underlying size grows for union. *)
