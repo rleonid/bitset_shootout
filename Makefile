@@ -16,10 +16,10 @@ clean:
 	ocamlbuild -clean
 
 create:
-	ocamlbuild -use-ocamlfind $(foreach package, $(PACKAGES),-package $(package)) -tag thread -I src create.native
+	ocamlbuild -use-ocamlfind $(foreach package, $(PACKAGES),-package $(package)) -cflag -unsafe -tag thread -I src create.native
 
 union:
-	ocamlbuild -use-ocamlfind $(foreach package, $(PACKAGES),-package $(package)) -tag thread -I src union.native
+	ocamlbuild -use-ocamlfind $(foreach package, $(PACKAGES),-package $(package)) -cflag -unsafe -tag thread -I src union.native
 
 diff:
-	ocamlbuild -use-ocamlfind $(foreach package, $(PACKAGES),-package $(package)) -tag thread -I src diff.native
+	ocamlbuild -use-ocamlfind $(foreach package, $(PACKAGES),-package $(package)) -cflag -unsafe -tag thread -I src diff.native

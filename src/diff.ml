@@ -29,6 +29,7 @@ let () =
   let ocb = staged OcbitsetTest.reduce_diff_test in
   let con = staged ContainersTest.reduce_diff_test in
   let ncn = staged NewContainersTest.reduce_diff_test in
+  let fwb = staged FixedWidthTest.reduce_diff_test in
 
   (* But first, let's make sure they're actually the same. *)
   let int_diff =
@@ -65,6 +66,9 @@ let () =
   let ncnarray_same = same (NewContainersTest.is_set (unst (ncn 100))) in
   Printf.printf "New Containers same results: %b\n" ncnarray_same;
 
+  let fwnarray_same = same (FixedWidthTest.is_set (unst (fwb 100))) in
+  Printf.printf "Fixed width same results: %b\n" fwnarray_same;
+
   let open Core_bench.Std in
   let btc name t =
     Bench.Test.create_indexed ~name ~args t
@@ -79,4 +83,5 @@ let () =
     
     ; *)btc "Containers" con
     ; btc "New Containers" ncn
+    ; btc "Fixed width" fwb
     ])
