@@ -25,11 +25,11 @@ let () =
   let zar = staged ZarithTest.reduce_diff_test in
   let bat = staged BatteriesTest.reduce_diff_test in
   let biv = staged BitvectorTest.reduce_diff_test in
-  let bia = staged BitarrayTest.reduce_diff_test in
+  (*let bia = staged BitarrayTest.reduce_diff_test in*)
   let ocb = staged OcbitsetTest.reduce_diff_test in
   let con = staged ContainersTest.reduce_diff_test in
-  let ncn = staged NewContainersTest.reduce_diff_test in
   let fwb = staged FixedWidthTest.reduce_diff_test in
+  let rwb = staged RefWidthTest.reduce_diff_test in
 
   (* But first, let's make sure they're actually the same. *)
   let int_diff =
@@ -54,8 +54,8 @@ let () =
   let bitvector_same = same (BitvectorTest.is_set (unst (biv 100))) in
   Printf.printf "Bitv same results: %b\n" bitvector_same;
 
-  let bitarray_same = same (BitarrayTest.is_set (unst (bia 100))) in
-  Printf.printf "Bitarray same results: %b\n" bitarray_same;
+  (*let bitarray_same = same (BitarrayTest.is_set (unst (bia 100))) in
+  Printf.printf "Bitarray same results: %b\n" bitarray_same;*)
 
   let ocbarray_same = same (OcbitsetTest.is_set (unst (ocb 100))) in
   Printf.printf "Ocbitset same results: %b\n" ocbarray_same;
@@ -63,25 +63,24 @@ let () =
   let conarray_same = same (ContainersTest.is_set (unst (con 100))) in
   Printf.printf "Containers same results: %b\n" conarray_same;
 
-  let ncnarray_same = same (NewContainersTest.is_set (unst (ncn 100))) in
-  Printf.printf "New Containers same results: %b\n" ncnarray_same;
-
   let fwnarray_same = same (FixedWidthTest.is_set (unst (fwb 100))) in
   Printf.printf "Fixed width same results: %b\n" fwnarray_same;
+
+  let rwnarray_same = same (RefWidthTest.is_set (unst (rwb 100))) in
+  Printf.printf "Ref width same results: %b\n" rwnarray_same;
 
   let open Core_bench.Std in
   let btc name t =
     Bench.Test.create_indexed ~name ~args t
   in
   Core.Command.run (Bench.make_command
-    [ (*btc "Zarith" zar
+    [ btc "Zarith" zar
     (*; btc "Zarith Precompute Masks" zarp *)
     ; btc "Batteries" bat
     ; btc "Bitvector" biv
-    ; btc "Bitarray" bia
     ; btc "Ocbitset" ocb
     
-    ; *)btc "Containers" con
-    ; btc "New Containers" ncn
+    ; btc "Containers" con
     ; btc "Fixed width" fwb
+    ; btc "Ref width" rwb
     ])

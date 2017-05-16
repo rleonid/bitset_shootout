@@ -182,6 +182,7 @@ module CSet = struct
     s
 end *)
 
+(*
 module BitarraySet = struct
 
   type t = Bitarray.t
@@ -213,6 +214,7 @@ module BitarraySet = struct
   let diff x y = Bitarray.bitwise_and x (Bitarray.bitwise_not y)
 
 end
+*)
 
 module OCbitSet = struct
 
@@ -287,48 +289,11 @@ module Cbitset = struct
 
 end
 
-(* Containers. *)
-module Ncbitset = struct
-
-  type t = Cn.t
-
-  type index =
-    { indices : int IntMap.t
-    ; size    : int
-    }
-
-  let index arr =
-    { indices = Array.fold_left arr ~init:(0, IntMap.empty)
-                    ~f:(fun (i, sm) a -> (i + 1, IntMap.add a i sm))
-                  |> snd
-    ; size    = Array.length arr
-    }
-
-  let empty i = Cn.create ~size:i.size false
-
-  let set i s elem =
-    Cn.set s (IntMap.find elem i.indices);
-    s
-
-  let singleton i elem =
-    set i (empty i) elem
-
-  let is_set i t elem = Cn.get t (IntMap.find elem i.indices)
-
-  let union = Cn.union
-
-  let negate = Cn.negate
-
-  let diff = Cn.diff
-
-end
-
-
 let test_size = 4000
 
 (* Fixed width. *)
 module FixedWidthBs = struct
-  
+
   module Fw = Fixed_width.Make(struct let size = test_size end)
 
   type t = Fw.t
@@ -363,6 +328,46 @@ module FixedWidthBs = struct
   let diff = Fw.diff
 
 end
+
+(* Ref Fixed width. *)
+module RefWidthBs = struct
+
+  module Fw = Fixed_width_r
+  let () = Fw.setup test_size
+
+  type t = Fw.t
+
+  type index =
+    { indices : int IntMap.t
+    ; size    : int
+    }
+
+  let index arr =
+    { indices = Array.fold_left arr ~init:(0, IntMap.empty)
+                    ~f:(fun (i, sm) a -> (i + 1, IntMap.add a i sm))
+                  |> snd
+    ; size    = Array.length arr
+    }
+
+  let empty _i = Fw.create false
+
+  let set i s elem =
+    Fw.set s (IntMap.find elem i.indices);
+    s
+
+  let singleton i elem =
+    set i (empty i) elem
+
+  let is_set i t elem = Fw.get t (IntMap.find elem i.indices)
+
+  let union = Fw.union
+
+  let negate = Fw.negate
+
+  let diff = Fw.diff
+
+end
+
 
 
 let elems = Array.init test_size ~f:(fun i -> i)
@@ -437,9 +442,9 @@ module ZarithTest = Test(ZarithBitSet)
 module ZarithPrecomputeMasksTest = Test(ZarithPrecomputeMasksBitSet)
 module BatteriesTest = Test(BatteriesBitSet)
 module BitvectorTest = Test(BitvectorSet)
-module BitarrayTest = Test(BitarraySet)
+(*module BitarrayTest = Test(BitarraySet) *)
 module OcbitsetTest = Test(OCbitSet)
 module ContainersTest = Test(Cbitset)
-module NewContainersTest = Test(Ncbitset)
 module FixedWidthTest = Test(FixedWidthBs)
+module RefWidthTest = Test(RefWidthBs)
 

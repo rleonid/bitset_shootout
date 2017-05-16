@@ -19,14 +19,12 @@ let () =
         | _    -> assert false)
   in
   Core.Command.run (Bench.make_command
-    [(* btc "Zarith"                  ZarithTest.create_multiple_elements
+    [ btc "Zarith"                  ZarithTest.create_multiple_elements
     (*; btc "Zarith Precompute Masks" ZarithPrecomputeMasksTest.create_multiple_elements  *)
     ; btc "Batteries"               BatteriesTest.create_multiple_elements
     ; btc "Bitv"                    BitvectorTest.create_multiple_elements
-    ; btc "Bitarray"                BitarrayTest.create_multiple_elements
     ; btc "Ocbitset"                OcbitsetTest.create_multiple_elements
-    
-    ; *) btc "Containers"           ContainersTest.create_multiple_elements
-    ; btc "New Containers"          NewContainersTest.create_multiple_elements
+    ; btc "Containers"              ContainersTest.create_multiple_elements
     ; btc "Fxed Width"              FixedWidthTest.create_multiple_elements
+    ; btc "Ref Width"               RefWidthTest.create_multiple_elements
     ])
