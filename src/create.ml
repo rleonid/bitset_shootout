@@ -23,7 +23,8 @@ let () =
     (*; btc "Zarith Precompute Masks" ZarithPrecomputeMasksTest.create_multiple_elements  *)
     ; btc "Batteries"               BatteriesTest.create_multiple_elements
     ; btc "Bitv"                    BitvectorTest.create_multiple_elements
-    ; btc "Bitarray"                BitarrayTest.create_multiple_elements
     ; btc "Ocbitset"                OcbitsetTest.create_multiple_elements
     ; btc "Containers"              ContainersTest.create_multiple_elements
+    ; btc "Fxed Width"              FixedWidthTest.create_multiple_elements
+    ; btc "Ref Width"               RefWidthTest.create_multiple_elements
     ])
