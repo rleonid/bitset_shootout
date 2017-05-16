@@ -25,6 +25,4 @@ let () =
     ; btc "Bitv"                    BitvectorTest.create_multiple_elements
     ; btc "Ocbitset"                OcbitsetTest.create_multiple_elements
     ; btc "Containers"              ContainersTest.create_multiple_elements
-    ; btc "Fxed Width"              FixedWidthTest.create_multiple_elements
-    ; btc "Ref Width"               RefWidthTest.create_multiple_elements
     ])

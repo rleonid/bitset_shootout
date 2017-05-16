@@ -28,8 +28,6 @@ let () =
   (*let bia = staged BitarrayTest.reduce_union_test in*)
   let ocb = staged OcbitsetTest.reduce_union_test in
   let con = staged ContainersTest.reduce_union_test in
-  let fwb = staged FixedWidthTest.reduce_union_test in
-  let rwb = staged RefWidthTest.reduce_union_test in
 
   (* But first, let's make sure they're actually the same. *)
   let int_union =
@@ -63,12 +61,6 @@ let () =
   let conarray_same = same (ContainersTest.is_set (unst (con 100))) in
   Printf.printf "Containers same results: %b\n" conarray_same;
 
-  let fwarray_same = same (FixedWidthTest.is_set (unst (fwb 100))) in
-  Printf.printf "fixed width same results: %b\n" fwarray_same;
-
-  let rwarray_same = same (RefWidthTest.is_set (unst (rwb 100))) in
-  Printf.printf "ref width same results: %b\n" rwarray_same;
-
   let open Core_bench.Std in
   let btc name t =
     Bench.Test.create_indexed ~name ~args t
@@ -80,6 +72,4 @@ let () =
     ; btc "Bitvector" biv
     ; btc "Ocbitset" ocb
     ; btc "Containers" con
-    ; btc "Fixed width " fwb
-    ; btc "Ref width " rwb
     ])
